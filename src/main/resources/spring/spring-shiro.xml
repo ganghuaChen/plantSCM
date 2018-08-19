@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+	http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-4.0.xsd
+	http://www.springframework.org/schema/mvc
+	http://www.springframework.org/schema/mvc/spring-mvc.xsd
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+	http://www.springframework.org/schema/util 
+	http://www.springframework.org/schema/util/spring-util.xsd">
+	
+	
+	
+	 <!-- 会话ID生成器 -->
+    <bean id="sessionIdGenerator" class="org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator"/>
+
+    <!-- 会话Cookie模板 关闭浏览器立即失效-->
+    <bean id="sessionIdCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <constructor-arg value="sid"/>
+        <property name="httpOnly" value="true"/>
+        <property name="maxAge" value="-1"/>
+    </bean>
+
+    <!-- 会话DAO -->
+    <bean id="sessionDAO" class="org.apache.shiro.session.mgt.eis.EnterpriseCacheSessionDAO">
+        <property name="sessionIdGenerator" ref="sessionIdGenerator"/>
+    </bean>
+
+    <!-- 会话验证调度器 -->
+    <bean name="sessionValidationScheduler" class="org.apache.shiro.session.mgt.quartz.QuartzSessionValidationScheduler">
+        <property name="sessionValidationInterval" value="1800000"/>
+        <property name="sessionManager" ref="sessionManager"/>
+    </bean>
+
+    <!-- 会话管理器 -->
+    <bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+        <property name="globalSessionTimeout" value="86400000"/>
+        <property name="deleteInvalidSessions" value="true"/>
+        <property name="sessionValidationSchedulerEnabled" value="true"/>
+        <property name="sessionValidationScheduler" ref="sessionValidationScheduler"/>
+        <property name="sessionDAO" ref="sessionDAO"/>
+        <property name="sessionIdCookieEnabled" value="true"/>
+        <property name="sessionIdCookie" ref="sessionIdCookie"/>
+    </bean>
+	
+
+
+
+
+
+
+
+    <!-- =========================================================
+         Shiro Core Components - Not Spring Specific
+         ========================================================= -->
+    <!-- Shiro's main business-tier object for web-enabled applications
+         (use DefaultSecurityManager instead when there is no web environment)-->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <property name="cacheManager" ref="cacheManager"/>
+        <!-- Single realm app.  If you have multiple realms, use the 'realms' property instead. -->
+        <property name="sessionMode" value="native"/>
+      	 <property name ="authenticator"  ref="authenticator"></property> 
+         <property name ="authorizer"  ref="authorizer"></property>
+         <!-- <property name="realm" ref="staffRealm"/>  -->
+    </bean>
+    
+    <!-- 认证器 根据下面两个bean来验证登录  至少验证成功一个就行了 -->
+    <bean id="authenticator"  class="org.apache.shiro.authc.pam.ModularRealmAuthenticator">
+    		<property name="realms" >
+    		<list>
+    			<ref bean="staffRealm"/>
+    			<ref bean="staffRealm1"/>
+    		</list>
+    	</property>
+    </bean>
+    
+  	<!--   授权器   这里进行授权的是staffRealm1 -->
+    <bean id="authorizer"   class="org.apache.shiro.authz.ModularRealmAuthorizer">
+    	<property name="realms" >
+    		<list>
+    			<ref bean="staffRealm"/>
+    			<ref bean="staffRealm1"/>
+    		</list>
+    	</property>
+    </bean>
+    
+    
+	<bean id="staffRealm" class="org.npc.plantSCM.realm.StaffRealm">
+			<property name="staffService" ref="staffService"/>	
+	</bean>
+	<bean id="staffRealm1" class="org.npc.plantSCM.realm.StaffRealm1">
+			<property name="staffService" ref="staffService"/>		
+	</bean>
+		
+		
+
+		
+		
+		
+    <!-- Let's use some enterprise caching support for better performance.  You can replace this with any enterprise
+         caching framework implementation that you like (Terracotta+Ehcache, Coherence, GigaSpaces, etc -->
+    <bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+        <!-- Set a net.sf.ehcache.CacheManager instance here if you already have one.  If not, a new one
+             will be creaed with a default config:
+             <property name="cacheManager" ref="ehCacheManager"/> -->
+        <!-- If you don't have a pre-built net.sf.ehcache.CacheManager instance to inject, but you want
+             a specific Ehcache configuration to be used, specify that here.  If you don't, a default
+             will be used.: -->
+        <property name="cacheManagerConfigFile" value="classpath:cache/ehcache.xml"/> 
+    </bean>
+
+    <!-- Used by the SecurityManager to access security data (users, roles, etc).
+         Many other realm implementations can be used too (PropertiesRealm,
+         LdapRealm, etc. -->
+    
+
+    <!-- =========================================================
+         Shiro Spring-specific integration
+         ========================================================= -->
+    <!-- Post processor that automatically invokes init() and destroy() methods
+         for Spring-configured Shiro objects so you don't have to
+         1) specify an init-method and destroy-method attributes for every bean
+            definition and
+         2) even know which Shiro objects require these methods to be
+            called. -->
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+
+    <!-- Enable Shiro Annotations for Spring-configured beans.  Only run after
+         the lifecycleBeanProcessor has run: -->
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+          depends-on="lifecycleBeanPostProcessor"/>
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+
+    <!-- Secure Spring remoting:  Ensure any Spring Remoting method invocations can be associated
+         with a Subject for security checks. -->
+    <bean id="secureRemoteInvocationExecutor" class="org.apache.shiro.spring.remoting.SecureRemoteInvocationExecutor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+	
+	
+	
+    <!-- Define the Shiro Filter here (as a FactoryBean) instead of directly in web.xml -
+         web.xml uses the DelegatingFilterProxy to access this bean.  This allows us
+         to wire things with more control as well utilize nice Spring things such as
+         PropertiesPlaceholderConfigurer and abstract beans or anything else we might need: -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <property name="securityManager" ref="securityManager"/>
+        <property name="loginUrl" value="/view/login.jsp"/>
+       <!--  <property name="successUrl" value="/success"/> -->
+        <property name="unauthorizedUrl" value="/jsp/unauthorized.jsp"/>
+        <property name="filters">
+			<map>	
+			<entry key="rolesOr">  
+                    <bean  class="org.npc.plantSCM.filter.CustomRolesAuthorizationFilter" />        
+             </entry>  
+             
+			</map>
+		</property>
+		
+
+        <!-- The 'filters' property is not necessary since any declared javax.servlet.Filter bean
+             defined will be automatically acquired and available via its beanName in chain
+             definitions, but you can perform overrides or parent/child consolidated configuration
+             here if you like: -->
+        <!-- <property name="filters">
+            <util:map>
+                <entry key="aName" value-ref="someFilterPojo"/>
+            </util:map>
+        </property> -->
+        <property name="filterChainDefinitions">
+            <value>
+            	/js/** =anon
+            	/css/** = anon
+            	/img/** =anon
+            	/fonts/** =anon
+            	/js** =anon
+            	/css** = anon
+            	/img** =anon
+            	/fonts** =anon
+            	/logout = logout
+               	/view/logout = logout
+               	/logoff = logout
+               	/view/logoff = logout
+            	 
+            	/view/login.html =anon
+            	/view/login =anon
+            	/login =anon
+               
+                /login.jsp = anon
+                /login = anon
+                
+                /jsp/shangwu.jsp = rolesOr["商务,领导"]
+                /jsp/boss.jsp = roles["领导"]
+                /jsp/factory.jsp = roles["工厂"]
+                /jsp/cangku.jsp = roles["仓库"]
+                
+                
+                 /view/business_inform.jsp =rolesOr["商务,领导"]
+                 /view/business_inventory.jsp =rolesOr["商务,领导"]
+                 /view/business_neworder.jsp =rolesOr["商务,领导"]
+                 /view/business_newpurchase.jsp =rolesOr["商务,领导"]
+                 /view/business_orderrecord.jsp =rolesOr["商务,领导"]
+                 /view/business_orderstatistics.jsp =rolesOr["商务,领导"]
+                 /view/business_purchaserecord.jsp =rolesOr["商务,领导"]
+                 /view/business_purchasestatistics.jsp =rolesOr["商务,领导"]
+                 
+                 
+                 /view/factory_hpoutrecord.jsp =rolesOr["工厂,领导"]
+                 /view/factory_inform.jsp =rolesOr["工厂,领导"]
+                 /view/factory_inventory.jsp =rolesOr["工厂,领导"]
+                 /view/factory_mat_inventory.jsp =rolesOr["工厂,领导"]
+                 /view/factory_newhpout.jsp =rolesOr["工厂,领导"]
+                 /view/factory_newinventory.jsp =rolesOr["工厂,领导"]
+                 /view/factory_hpoutrecord.jsp =rolesOr["工厂,领导"]
+                 /view/factory_openfactoryrecord.jsp =rolesOr["工厂,领导"]
+                 
+                 
+                 
+                 /view/warehouse_hjinrecord.jsp =rolesOr["仓库,领导"]
+                 /view/warehouse_hjinventory.jsp =rolesOr["仓库,领导"]
+                 /view/warehouse_hjprint.jsp =rolesOr["仓库,领导"]
+                 /view/warehouse_hpinrecord.jsp =rolesOr["仓库,领导"]
+                 /view/warehouse_hpinventory.jsp =rolesOr["仓库,领导"]
+                 /view/warehouse_hpprint.jsp =rolesOr["仓库,领导"]
+                 /view/warehouse_inform.jsp =rolesOr["仓库,领导"]
+                 /view/warehouse_orderstatistics.jsp =rolesOr["仓库,领导"]
+                 /view/warehouse_songhuomanage.jsp =rolesOr["仓库,领导"]
+               
+                 
+                 
+                
+                /** = authc
+                
+            </value>
+        </property>
+    </bean>
+
+</beans>

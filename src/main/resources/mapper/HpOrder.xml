@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.npc.plantSCM.dao.HpOrderDao">
+    
+     <select id="getHpOrder" resultType="HpOrder">
+        select hporder_id,date_format(hporder_date,'%Y-%m-%d') hporder_date,hp_customer_name,hporder_phone,
+        hporder_performer,date_format(hpdelivery_date,'%Y-%m-%d') hpdelivery_date,hporder_shape,hporder_spec,
+        hporder_model,hporder_number,hpsongchu_number,hpweisong_number,date_format(actual_date,'%Y-%m-%d') actual_date,
+        hporder_price,hporder_total_price,hporder_state,hporder_remark 
+        from hp_order
+        <where>
+            <if test="hpCustomerName != null and hpCustomerName != '' and hpCustomerName != 'all'">
+                hp_customer_name = #{hpCustomerName}
+            </if>
+            <if test="hporderShape != null and hporderShape != '' and hporderShape != 'all' ">
+                and hporder_shape = #{hporderShape}
+            </if>
+            <if test="hporderModel != null and hporderModel != '' and hporderModel != 'all'">
+                and hporder_model = #{hporderModel}
+            </if>
+            <if test="hporderState != null and hporderState !='all' ">
+                and hporder_state = #{hporderState}
+            </if>
+            <if test="beginDate != null and beginDate != ''">
+                and date_format(hporder_date,'%Y-%m-%d') &gt;= #{beginDate}
+            </if>
+             <if test="endDate != null and endDate != ''">
+                and date_format(hporder_date,'%Y-%m-%d') &lt;= #{endDate}
+            </if>   
+        </where>
+        order by hporder_id desc
+     </select>
+     
+     <insert id="insertHpOrder" parameterType="HpOrder">
+         <selectKey keyProperty="hporderId" resultType="int" order="AFTER">
+            select LAST_INSERT_ID()
+        </selectKey>
+        insert into hp_order(hporder_date,hp_customer_name,hporder_phone,
+        hporder_performer,hpdelivery_date,hporder_shape,hporder_spec,
+        hporder_model,hporder_number,hpsongchu_number,hpweisong_number,actual_date,
+        hporder_price,hporder_total_price,hporder_state,hporder_remark) value
+        (#{hporderDate},#{hpCustomerName},#{hporderPhone},#{hporderPerformer},#{hpdeliveryDate},#{hporderShape},#{hporderSpec},
+        #{hporderModel},#{hporderNumber},#{hpsongchuNumber},#{hpweisongNumber},#{actualDate},#{hporderPrice},#{hporderTotalPrice},
+        #{hporderState},#{hporderRemark})
+     </insert>
+     
+     <update id="updateHpOrder" parameterType="HpOrder">
+         update hp_order
+         <set>
+          <if test="hporderDate != null and hporderDate !=''">
+             hporder_date = #{hporderDate},
+         </if>
+         <if test="hpCustomerName != null and hpCustomerName !=''">
+             hp_customer_name = #{hpCustomerName},
+         </if>
+             hporder_phone = #{hporderPhone},
+         <if test="hporderPerformer != null and hporderPerformer != ''">
+             hporder_performer = #{hporderPerformer},
+         </if>
+         <if test="hpdeliveryDate != null and hpdeliveryDate !=''">
+             hpdelivery_date = #{hpdeliveryDate},
+         </if>
+         <if test="hporderShape != null and hporderShape != '' ">
+             hporder_shape = #{hporderShape},
+         </if>
+         <if test="hporderSpec != null and hporderSpec !=''">
+             hporder_spec = #{hporderSpec},
+         </if>
+         <if test="hporderModel != null and hporderModel !=''">
+             hporder_model = #{hporderModel},
+         </if>
+         <if test="hporderNumber != null and hporderNumber !=''">
+             hporder_number = #{hporderNumber},
+         </if>
+         <if test="hpsongchuNumber != null">
+             hpsongchu_number = #{hpsongchuNumber},
+         </if>
+         <if test="hpweisongNumber != null">
+             hpweisong_number = #{hpweisongNumber},
+         </if>
+          <if test="actualDate != null and actualDate !=''">
+             actual_date = #{actualDate},
+         </if>
+         <if test="hporderPrice != null and hporderPrice !=''">
+             hporder_price = #{hporderPrice},
+         </if>
+         <if test="hporderTotalPrice != null and hporderTotalPrice !=''">
+             hporder_total_price = #{hporderTotalPrice},
+         </if>
+         <if test="hporderState != null">
+             hporder_state = #{hporderState},
+         </if>
+             hporder_remark = #{hporderRemark}
+         </set>
+         where hporder_id = #{hporderId}
+     </update>
+     
+     <resultMap type="org.npc.plantSCM.po.HpOrderStatistics" id="HpOrderStatisticsMap">
+         <result property="hporderShape" column="hporder_shape"/>
+         <result property="hporderSpec" column="hporder_spec"/>
+         <result property="hporderModel" column="hporder_model"/>
+         <result property="hporderNumberStatistics" column="hporder_number_statistics"/>
+         <result property="hporderTotalPriceStatistics" column="hporder_total_price_statistics"/>
+     </resultMap>
+     <select id="getHpOrderStatistics" resultMap="HpOrderStatisticsMap">
+         select hporder_shape,hporder_spec,hporder_model,sum(hporder_number) hporder_number_statistics,
+          sum(hporder_total_price) hporder_total_price_statistics
+         from hp_order 
+         <where>
+             hporder_state != '已取消'
+             <if test="beginDate != null and beginDate != ''">
+                 and date_format(hporder_date,'%Y-%m-%d') &gt;= #{beginDate}
+              </if>
+               <if test="endDate != null and endDate != ''">
+                and date_format(hporder_date,'%Y-%m-%d') &lt;= #{endDate}
+            </if> 
+         </where>
+         group by hporder_shape,hporder_spec,hporder_model
+     </select>
+     
+        <!-- 查找需要修改的记录 -->
+     <select id="checkHpOrder" parameterType="HpOrder" resultType="HpOrder">
+         select * from hp_order where hporder_id = #{hporderId}
+     </select>
+</mapper>

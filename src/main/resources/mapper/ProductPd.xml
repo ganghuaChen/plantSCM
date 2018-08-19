@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.npc.plantSCM.dao.ProductPdDao">
+
+     <select id="getProductPdByDateAndModel" resultType="ProductPd">
+         select id,model,date_format(inventory_date,'%Y-%m-%d') inventory_date,
+         before_blanks,before_waste,before_bulk,before_semi,before_product,before_dailiao,before_total,
+         after_sale,after_waste,after_bulk,after_semi,after_product,
+         after_dailiao,after_total,d_value 
+         from product_pd
+         <where>
+            <if test="beginDate != null and beginDate != ''">
+                date_format(inventory_date,'%Y-%m-%d') &gt;= #{beginDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                and date_format(inventory_date,'%Y-%m-%d') &lt;= #{endDate}
+            </if>
+             <if test="model != null and model !='' and model != 'all'">
+                and model= #{model}
+             </if>
+         </where>
+         order by id desc
+     </select>
+     
+     <insert id="insertProductPd" parameterType="ProductPd">
+        <selectKey keyProperty="id" resultType="int" order="AFTER">
+            select LAST_INSERT_ID()
+        </selectKey>
+            insert into product_pd (model,inventory_date,before_blanks,before_waste,before_bulk,before_semi,before_product,
+            before_dailiao,before_total,after_sale,after_waste,after_bulk,after_semi,after_product,after_dailiao,after_total,d_value)             
+            value (#{model},#{inventoryDate},#{beforeBlanks},#{beforeWaste},#{beforeBulk}, #{beforeSemi},#{beforeProduct},
+            #{beforeDailiao},#{beforeTotal},#{afterSale},#{afterWaste},#{afterBulk}, #{afterSemi},
+            #{afterProduct},#{afterDailiao},#{afterTotal},#{dValue})
+     </insert>
+     
+     <update id="updateProductPd" parameterType="ProductPd">
+         update product_pd
+         <set>
+              <if test="model != null and model !=''">
+                  model= #{model},
+              </if>
+              <if test="inventoryDate != null and inventoryDate !=''">
+                  inventory_date = #{inventoryDate},
+              </if>
+              <if test="beforeBlanks != null">
+                  before_blanks = #{beforeBlanks},
+              </if>
+              <if test="beforeWaste != null">
+                  before_waste = #{beforeWaste},
+              </if>
+              <if test="beforeBulk != null">
+                  before_bulk = #{beforeBulk},
+              </if>
+              <if test="beforeSemi != null">
+                  before_semi = #{beforeSemi},
+              </if>
+              <if test="beforeProduct != null">
+                  before_product = #{beforeProduct},
+              </if>
+               <if test="beforeDailiao != null">
+                  before_dailiao = #{beforeDailiao},
+              </if>
+              <if test="beforeTotal != null">
+                  before_total = #{beforeTotal},
+              </if>          
+              <if test="afterSale != null">
+                  after_sale = #{afterSale},
+              </if>
+              <if test="afterWaste != null">
+                  after_waste = #{afterWaste},
+              </if>
+              <if test="afterBulk != null">
+                  after_bulk = #{afterBulk},
+              </if>
+              <if test="afterSemi != null">
+                  after_semi = #{afterSemi},
+              </if>
+              <if test="afterProduct != null">
+                  after_product = #{afterProduct},
+              </if>
+              <if test="afterDailiao != null">
+                  after_dailiao = #{afterDailiao},
+              </if>
+              <if test="afterTotal != null">
+                  after_total = #{afterTotal},
+              </if>
+              <if test="dValue != null">
+                  d_value = #{dValue}
+              </if>
+         </set>
+         where id = #{id}
+     </update>
+ 
+
+</mapper>

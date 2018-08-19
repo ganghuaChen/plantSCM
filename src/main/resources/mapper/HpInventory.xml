@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.npc.plantSCM.dao.HpInventoryDao">
+
+    <!-- 获取焊片型号 -->
+    <resultMap type="java.lang.String" id="modelResult">
+         <result property="model" column="model" jdbcType="VARCHAR"/>
+     </resultMap>
+    <select id="getModel" resultMap="modelResult">
+         select model from hp_model
+    </select>
+    
+    <!-- 获取焊片规格 -->
+    <resultMap type="java.lang.String" id="specResult">
+         <result property="spec" column="spec" jdbcType="VARCHAR"/>
+     </resultMap>
+    <select id="getSpec" resultMap="specResult">
+         select distinct spec from hp_inventory
+    </select>
+    
+    <!-- 获取焊片库存记录 -->
+     <select id="getHpInventoryByHp" resultType="HpInventory">
+         select * from hp_inventory
+         <where>
+            <if test="shape != null and shape != '' and shape != 'all' ">
+                shape = #{shape}
+            </if>
+            <if test="model != null and model !='' and model != 'all'">
+                 and  model= #{model}
+            </if>
+            <if test="spec != null and spec != '' and spec != 'all'">
+                and spec = #{spec}
+            </if>    
+        </where>
+      </select>
+      
+      <!-- 新建库存 -->
+      <insert id="insertHpInventory" parameterType="org.npc.plantSCM.po.HpInventory">
+        <selectKey keyProperty="hpkcId" resultType="int" order="AFTER">
+            select LAST_INSERT_ID()
+        </selectKey>
+          insert into hp_inventory(model,shape,spec,actual_number)
+          value(#{model},#{shape},#{spec},#{actualNumber})
+    </insert>
+    
+    
+    <!-- 修改库存 --> 
+    <update id="updateHpInventory" parameterType="HpInventory">
+         update hp_inventory
+         <set> 
+               <if test="model != null and model !=''">
+                  model= #{model},
+              </if> 
+              <if test="shape != null and shape !=''">
+                  shape= #{shape},
+              </if> 
+              <if test="spec != null and spec !=''">
+                  spec= #{spec},
+              </if> 
+              <if test="actualNumber != null">
+                  actual_number= #{actualNumber}
+              </if>       
+         </set>
+         where hpkc_id = #{hpkcId}
+    </update>
+    
+    <select id="checkHpInventory" resultType="HpInventory" parameterType="int">
+         select * from hp_inventory where hpkc_id = #{id}
+    </select>
+</mapper>

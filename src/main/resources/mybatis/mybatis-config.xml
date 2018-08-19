@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+   <settings>
+       <!--使用JDBC的getGeneratedKeys获取自增主键值-->
+       <setting name="useGeneratedKeys" value="true" />
+       <!--使用列标签(数据库中的字段名)代替列别名(查询语句查询字段的时候给字段自定义的名称.默认true
+          select name as title(实体中的属性名是title) form table;
+                                    开启后mybatis会自动帮我们把表中name的值赋到对应实体的title属性中
+        -->
+       <setting name="useColumnLabel" value="true" />
+       <!-- 是否开启自动驼峰命名规则（camel case）映射，即从经典数据库列名 A_COLUMN 到经典 Java 属性名 aColumn 的类似映射。  默认false
+                                        数据库字段： role_id  bean： private Integer roleId; mapper配置不需要写字段与属性的配置，会自动映射
+        --> 
+       <setting name="mapUnderscoreToCamelCase" value="true" />
+   </settings>
+</configuration>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.npc.plantSCM.dao.SonghuoStatisticsDao">
+
+<!-- -->
+    <resultMap type="org.npc.plantSCM.po.SonghuoStatistics" id="getSonghuoStatisticsMap">
+         <result property="customerName" column="customer_name"/>
+         <result property="hporderNumberStatistics" column="hporder_number_statistics"/>
+         <result property="hpsongchuNumberStatistics" column="hpsongchu_number_statistics"/>
+         <result property="hjorderNumberStatistics" column="hjorder_number_statistics"/>
+         <result property="hjsongchuNumberStatistics" column="hjsongchu_number_statistics"/>
+     </resultMap>
+     <select id="getSonghuoStatistics" resultMap="getSonghuoStatisticsMap">
+select hp.customer_name,
+       hporder_number_statistics,hpsongchu_number_statistics,
+       hjorder_number_statistics,hjsongchu_number_statistics
+from (
+select hp_customer_name customer_name,
+       	 ifnull(sum(hporder_number),0) hporder_number_statistics,
+         ifnull(sum(hpsongchu_number),0) hpsongchu_number_statistics
+         from hp_order
+         where hp_customer_name = #{customerName} and hporder_date between #{beginDate} and #{endDate} and hporder_state != '已取消')hp,
+(select hj_customer_name customer_name,
+       	 ifnull(sum(hjorder_number),0) hjorder_number_statistics,
+         ifnull(sum(hjsongchu_number),0) hjsongchu_number_statistics
+         from hj_order
+         where hj_customer_name = #{customerName} and hj_product_date between #{beginDate} and #{endDate} and hjorder_state != '已取消')hj
+where hp.customer_name is not null
+
+union
+
+select hj.customer_name,
+       hporder_number_statistics,hpsongchu_number_statistics,
+       hjorder_number_statistics,hjsongchu_number_statistics
+from (
+select hp_customer_name customer_name,
+       	 ifnull(sum(hporder_number),0) hporder_number_statistics,
+         ifnull(sum(hpsongchu_number),0) hpsongchu_number_statistics
+         from hp_order
+         where hp_customer_name = #{customerName} and hporder_date between #{beginDate} and #{endDate} and hporder_state != '已取消')hp,
+(select hj_customer_name customer_name,
+       	 ifnull(sum(hjorder_number),0) hjorder_number_statistics,
+         ifnull(sum(hjsongchu_number),0) hjsongchu_number_statistics
+         from hj_order
+         where hj_customer_name = #{customerName} and hj_product_date between #{beginDate} and #{endDate} and hjorder_state != '已取消')hj
+where hj.customer_name is not null    
+     </select>
+
+     <select id="getAllCustomerName" resultType="String">
+         select hp_customer_name
+         from hp_order,hj_order
+         union
+         select hj_customer_name
+         from hp_order,hj_order
+     </select>
+</mapper>

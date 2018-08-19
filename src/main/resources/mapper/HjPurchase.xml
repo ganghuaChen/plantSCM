@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.npc.plantSCM.dao.HjPurchaseDao">
+
+    <insert id="insertHjPurchase" parameterType="HjPurchase">
+        <selectKey keyProperty="id" resultType="int" order="AFTER">
+            select LAST_INSERT_ID()
+        </selectKey>
+        insert into hj_purchase(hj_date,hj_species,hj_price,hj_number,
+        hj_total_price,hj_from,hj_storage_state,hj_note) value
+        (#{hjDate},#{hjSpecies},#{hjPrice},#{hjNumber},#{hjTotalPrice},#{hjFrom},#{hjStorageState},#{hjNote})
+    </insert>
+    
+    <!-- 根据厂家获取购买记录 -->
+    <select id="getHjPurchase" resultType="HjPurchase">
+        select id,date_format(hj_date,'%Y-%m-%d') hj_date,hj_species,hj_price,hj_number,
+        hj_total_price,hj_from,hj_storage_state,hj_note 
+        from hj_purchase
+        <where>
+            <if test="hjFrom != null and hjFrom != '' and hjFrom != 'all'">
+                hj_from = #{hjFrom}
+            </if> 
+            <if test="beginDate != null and beginDate != ''">
+                 and date_format(hj_date,'%Y-%m-%d') &gt;= #{beginDate}
+              </if>
+               <if test="endDate != null and endDate != ''">
+                and date_format(hj_date,'%Y-%m-%d') &lt;= #{endDate}
+            </if>   
+        </where>
+        order by id desc
+    </select>
+    
+    <!-- 根据厂家状态获取入库记录 -->
+     <select id="getHjRuKu" resultType="HjPurchase">
+        select id,date_format(hj_date,'%Y-%m-%d') hj_date,hj_species,hj_price,hj_number,
+        hj_total_price,hj_from,hj_storage_state,hj_note 
+        from hj_purchase
+        <where>
+            <if test="hjFrom != null and hjFrom != '' and hjFrom != 'all'">
+                hj_from = #{hjFrom}
+            </if> 
+            <if test="beginDate != null and beginDate != ''">
+                 and date_format(hj_date,'%Y-%m-%d') &gt;= #{beginDate}
+              </if>
+               <if test="endDate != null and endDate != ''">
+                and date_format(hj_date,'%Y-%m-%d') &lt;= #{endDate}
+            </if>  
+            <if test="hjStorageState != null">
+                and hj_storage_state = #{hjStorageState}
+            </if>    
+        </where>
+        order by id desc
+    </select>
+    
+    <update id="updateHjPurchase" parameterType="HjPurchase">
+        update hj_purchase
+         <set>
+          <if test="hjDate != null and hjDate !=''">
+             hj_date = #{hjDate},
+         </if>
+         <if test="hjSpecies != null and hjSpecies != ''">
+             hj_species = #{hjSpecies},
+         </if>
+         <if test="hjPrice != null and hjPrice!=''">
+             hj_price = #{hjPrice},
+         </if>
+         <if test="hjNumber != null and hjNumber != ''">
+             hj_number = #{hjNumber},
+         </if>
+         <if test="hjTotalPrice != null and hjTotalPrice !=''">
+             hj_total_price = #{hjTotalPrice},
+         </if>
+         <if test="hjFrom != null and hjFrom !=''">
+             hj_from = #{hjFrom},
+         </if>
+         <if test="hjStorageState != null">
+             hj_storage_state = #{hjStorageState},
+         </if>
+             hj_note = #{hjNote}
+         </set>
+         where id = #{id}
+    </update>
+    
+    <select id="checkHjPurchase" resultType="HjPurchase" parameterType="HjPurchase">
+         select * from hj_purchase
+    </select>
+
+    <!-- 获取统计信息 -->
+    <resultMap type="org.npc.plantSCM.po.HjPurchaseStatistics" id="HjPurchaseStatisticsMap">
+         <result property="hjSpecies" column="hj_species"/>
+         <result property="hjNumberStatistics" column="hj_number_statistics"/>
+         <result property="hjTotalPriceStatistics" column="hj_total_price_statistics"/>
+     </resultMap>
+     <select id="getHjPurchaseStatistics" resultMap="HjPurchaseStatisticsMap">
+         select hj_species,sum(hj_number) hj_number_statistics,
+          sum(hj_total_price) hj_total_price_statistics
+         from hj_purchase 
+         <where>
+             
+             <if test="beginDate != null and beginDate != ''">
+                 date_format(hj_date,'%Y-%m-%d') &gt;= #{beginDate}
+              </if>
+               <if test="endDate != null and endDate != ''">
+                and date_format(hj_date,'%Y-%m-%d') &lt;= #{endDate}
+            </if> 
+         </where>
+         group by hj_species
+     </select>
+
+     
+</mapper>

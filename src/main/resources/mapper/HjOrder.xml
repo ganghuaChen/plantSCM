@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.npc.plantSCM.dao.HjOrderDao">
+     
+     <select id="getHjOrder" resultType="HjOrder">
+          select hjorder_id,date_format(hj_product_date,'%Y-%m-%d') hj_product_date,hj_type,hj_customer_name,hjorder_phone,
+          date_format(hjdelivery_date,'%Y-%m-%d') hjdelivery_date,hjorder_number,hjsongchu_number,
+          hjweisong_number,date_format(actual_date,'%Y-%m-%d') actual_date,hjorder_factory,hjorder_price,hjorder_total_price,
+          hjorder_state,hjorder_remark 
+          from hj_order
+          <where>
+              <if test="hjCustomerName != null and hjCustomerName !='' and hjCustomerName != 'all'">
+                 hj_customer_name = #{hjCustomerName}
+              </if>
+              <if test="hjorderState != null and hjorderState != 'all'">
+                 and hjorder_state = #{hjorderState}
+              </if>
+              <if test="beginDate != null and beginDate != ''">
+                 and date_format(hj_product_date,'%Y-%m-%d') &gt;= #{beginDate}
+              </if>
+               <if test="endDate != null and endDate != ''">
+                and date_format(hj_product_date,'%Y-%m-%d') &lt;= #{endDate}
+            </if>   
+          </where>
+          order by hjorder_id desc
+     </select>
+     
+     <insert id="insertHjOrder"  parameterType="HjOrder">
+         <selectKey keyProperty="hjorderId" resultType="int" order="AFTER">
+            select LAST_INSERT_ID()
+         </selectKey>
+          insert into hj_order (hj_product_date,hj_type,hj_customer_name,hjorder_phone,
+          hjdelivery_date,hjorder_number,hjsongchu_number,
+          hjweisong_number,actual_date,hjorder_factory,hjorder_price,hjorder_total_price,
+          hjorder_state,hjorder_remark) value
+          (#{hjProductDate},#{hjType},#{hjCustomerName},#{hjorderPhone},#{hjdeliveryDate},#{hjorderNumber},
+          #{hjsongchuNumber},#{hjweisongNumber},#{actualDate},#{hjorderFactory},#{hjorderPrice},#{hjorderTotalPrice},#{hjorderState},
+          #{hjorderRemark})
+         
+     </insert>
+     
+     <update id="updateHjOrder" parameterType="HjOrder">
+          update hj_order
+          <set>
+          <if test="hjProductDate != null and hjProductDate !=''">
+             hj_product_date = #{hjProductDate},
+         </if>
+         <if test="hjType != null and hjType !=''">
+             hj_type = #{hjType},
+         </if>
+             hjorder_phone = #{hjorderPhone},
+         <if test="hjCustomerName != null and hjCustomerName != ''">
+             hj_customer_name = #{hjCustomerName},
+         </if>
+         <if test="hjdeliveryDate != null and hjdeliveryDate != '' ">
+             hjdelivery_date = #{hjdeliveryDate},
+         </if>
+         <if test="hjorderNumber != null and hjorderNumber !=''">
+             hjorder_number = #{hjorderNumber},
+         </if>
+         <if test="hjsongchuNumber != null">
+             hjsongchu_number = #{hjsongchuNumber},
+         </if>
+         <if test="hjweisongNumber != null">
+             hjweisong_number = #{hjweisongNumber},
+         </if>
+         <if test="actualDate != null and actualDate!=''">
+             actual_date = #{actualDate},
+         </if>
+         <if test="hjorderFactory != null and hjorderFactory !=''">
+             hjorder_factory = #{hjorderFactory},
+         </if>
+          <if test="hjorderPrice != null and hjorderPrice !=''">
+             hjorder_price = #{hjorderPrice},
+         </if>
+         <if test="hjorderTotalPrice != null and hjorderTotalPrice !=''">
+             hjorder_total_price = #{hjorderTotalPrice},
+         </if>
+         <if test="hjorderState != null and hjorderState !=''">
+             hjorder_state = #{hjorderState},
+         </if>
+             hjorder_remark = #{hjorderRemark}
+          </set>
+           where hjorder_id = #{hjorderId}
+     </update>
+     
+     
+     <resultMap type="org.npc.plantSCM.po.HjOrderStatistics" id="HjOrderStatisticsMap">
+         <result property="hjType" column="hj_type"/>
+         <result property="hjorderNumberStatistics" column="hjorder_number_statistics"/>
+         <result property="hjorderTotalPriceStatistics" column="hjorder_total_price_statistics"/>
+     </resultMap>
+     <select id="getHjOrderStatistics" resultMap="HjOrderStatisticsMap">
+         select hj_type,sum(hjorder_number) hjorder_number_statistics,
+          sum(hjorder_total_price) hjorder_total_price_statistics
+         from hj_order 
+         <where>
+             hjorder_state != '已取消'
+             <if test="beginDate != null and beginDate != ''">
+                 and date_format(hj_product_date,'%Y-%m-%d') &gt;= #{beginDate}
+              </if>
+               <if test="endDate != null and endDate != ''">
+                and date_format(hj_product_date,'%Y-%m-%d') &lt;= #{endDate}
+            </if> 
+         </where>
+         group by hj_type
+     </select>
+     
+     <!-- 查找需要修改的记录 -->
+     <select id="checkHjOrder" parameterType="HjOrder" resultType="HjOrder">
+         select * from hj_order where hjorder_id = #{hjorderId}
+     </select>
+</mapper>

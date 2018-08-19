@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.npc.plantSCM.dao.PhoneDao">
+     
+    <resultMap type="Phone" id="get">
+        <id property="id" column="id"/>
+        <result property="phone" column="phone"/>
+         <result property="role" column="role_name"/>
+    </resultMap>
+    <select id="getPhone" resultMap="get">
+        select id,role_name,phone from phone
+    </select>
+    
+    <insert id="insertPhone" parameterType="Phone">
+        insert into phone(phone,role_name) value (#{phone},#{role})
+    </insert>
+    
+    <delete id="deletePhone" parameterType="Integer">
+        delete from phone where id = #{id}
+    </delete>
+
+
+</mapper>

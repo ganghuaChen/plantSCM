@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.npc.plantSCM.dao.OpenFactoryDao">
+
+    <!-- 根据起始时间、终止日期和型号获取开炉记录 -->
+    <select id="getOpenFactoryByDateAndModel" resultType="OpenFactory">
+        select id,model,date_format(open_date,'%Y-%m-%d') open_date,ag_weight,cu_weight,zn_weight,cd_weight,sn_weight,batch_yl_weight,waste_weight,batch_blanks_weight,fire_number,average_consume,proportion
+        from open_factory 
+        <where>
+            <if test="model != null and model !='' and model != 'all'">
+                model= #{model}
+            </if>
+            <if test="beginDate != null and beginDate != ''">
+                and date_format(open_date,'%Y-%m-%d') &gt;= #{beginDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                and date_format(open_date,'%Y-%m-%d') &lt;= #{endDate}
+            </if>    
+        </where>
+        order by id desc
+    </select>
+    
+    <insert id="insertOpenFactory" parameterType="org.npc.plantSCM.po.OpenFactory">
+        <selectKey keyProperty="id" resultType="int" order="AFTER">
+            select LAST_INSERT_ID()
+        </selectKey>
+          insert into open_factory(model,open_date,ag_weight,cu_weight,zn_weight,cd_weight,sn_weight,batch_yl_weight,waste_weight,batch_blanks_weight,fire_number,average_consume,proportion)
+          value(#{model},#{openDate},#{agWeight},#{cuWeight},#{znWeight},#{cdWeight},#{snWeight},#{batchYlWeight},#{wasteWeight},#{batchBlanksWeight},#{fireNumber},#{averageConsume},#{proportion})
+    </insert>
+    
+    <update id="updateOpenFactory" parameterType="org.npc.plantSCM.po.OpenFactory">
+         update open_factory
+         <set>
+              <if test="model != null and model !=''">
+                  model= #{model},
+              </if>
+              <if test="openDate != null and openDate !=''">
+                  open_date = #{openDate},
+              </if>
+              <if test="agWeight != null and agWeight !=''">
+                  ag_weight = #{agWeight},
+              </if>
+              <if test="cuWeight != null and cuWeight !=''">
+                  cu_weight = #{cuWeight},
+              </if>
+              <if test="znWeight != null and znWeight !=''">
+                  zn_weight = #{znWeight},
+              </if>
+              <if test="cdWeight != null and cdWeight !=''">
+                  cd_weight = #{cdWeight},
+              </if>
+              <if test="snWeight != null and snWeight !=''">
+                  sn_weight = #{snWeight},
+              </if>
+              <if test="batchYlWeight != null and batchYlWeight !=''">
+                  batch_yl_weight = #{batchYlWeight},
+              </if>
+              <if test="wasteWeight != null and wasteWeight !=''">
+                  waste_weight = #{wasteWeight},
+              </if>
+              <if test="batchBlanksWeight != null and batchBlanksWeight !=''">
+                  batch_blanks_weight = #{batchBlanksWeight},
+              </if>
+              <if test="fireNumber != null and fireNumber !=''">
+                  fire_number = #{fireNumber},
+              </if>
+              <if test="averageConsume != null and averageConsume !=''">
+                  average_consume = #{averageConsume},
+              </if>
+              <if test="proportion != null and proportion !=''">
+                  proportion = #{proportion}
+              </if>
+         </set>
+         where id = #{id}
+    </update>
+    
+    <!-- 查找需要修改的记录 -->
+    <select id="checkOpenFactory" parameterType="OpenFactory" resultType="OpenFactory">
+        select * from open_factory where id = #{id}
+    </select>
+
+</mapper>

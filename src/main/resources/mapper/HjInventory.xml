@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.npc.plantSCM.dao.HjInventoryDao">
+
+    <!-- 显示所有厂家 -->
+    <select id="getHjFactory" resultType="String">
+        select distinct hj_Factory from hj_inventory
+    </select>
+
+    <!-- 根据厂家获取库存 -->
+    <select id="getHjInventoryByFactory" resultType="HjInventory">
+        select * from hj_inventory
+        <where>
+            <if test="hjFactory != null and hjFactory !='' and hjFactory !='all'">
+               hj_factory = #{hjFactory}
+            </if>
+        </where>
+    </select>
+    
+     <!-- 新建库存 -->
+      <insert id="insertHjInventory" parameterType="HjInventory">
+        <selectKey keyProperty="hjkcId" resultType="int" order="AFTER">
+            select LAST_INSERT_ID()
+        </selectKey>
+          insert into hj_inventory(hj_type,hj_factory,hj_actual_number)
+          value(#{hjType},#{hjFactory},#{hjActualNumber})
+    </insert>
+    
+    <!-- 修改库存 -->
+    <update id="updateHjInventory" parameterType="HpInventory">
+        update hj_inventory
+        <set> 
+               <if test="hjType != null and hjType !=''">
+                  hj_type= #{hjType},
+              </if> 
+              <if test="hjFactory != null and hjFactory !=''">
+                  hj_factory= #{hjFactory},
+              </if> 
+              <if test="hjActualNumber != null">
+                  hj_actual_number= #{hjActualNumber}
+              </if>       
+         </set>
+         where hjkc_id = #{hjkcId}
+    </update>
+    
+    <!-- 根据厂家和种类获取库存 -->
+    <select id="getHjInventoryByFactoryAndType" resultType="HjInventory">
+        select * from hj_inventory
+        <where>
+            <if test="hjFactory != null and hjFactory !='' and hjFactory !='all'">
+               hj_factory = #{hjFactory}
+            </if>
+            <if test="hjType != null and hjType !='' and hjType!='all'">
+               and hj_type = #{hjType}
+            </if>
+        </where>
+    </select>
+    
+    <select id="whetherRuku" resultType="Boolean" parameterType="int">
+         select hj_storage_state from hj_purchase where id = #{id}
+     </select>
+     
+     <select id="checkHjInventory" resultType="HjInventory" parameterType="int">
+         select * from hj_inventory where hjkc_id = #{id}
+     </select>
+</mapper>

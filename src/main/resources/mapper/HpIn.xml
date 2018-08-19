@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.npc.plantSCM.dao.HpInDao">
+     
+     <select id="getHpIn" resultType="HpIn">
+         select id,date_format(hpstorage_date,'%Y-%m-%d') hpstorage_date,hp_model,hp_spec,
+         hpstorage_weight,hp_shape,hp_from,hpstorage_state,hp_out_id,hp_purchase_id 
+         from hp_in
+          <where>
+             <if test="beginDate != null and beginDate != ''">
+                date_format(hpstorage_date,'%Y-%m-%d') &gt;= #{beginDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                and date_format(hpstorage_date,'%Y-%m-%d') &lt;= #{endDate}
+            </if>   
+            <if test="hpShape != null and hpShape !='' and hpShape != 'all'">
+                and hp_shape= #{hpShape}
+            </if>
+            <if test="hpModel != null and hpModel !='' and hpModel != 'all'">
+                and hp_model= #{hpModel}
+            </if>
+            <if test="hpstorageState != null">
+                and hpstorage_state= #{hpstorageState}
+            </if>
+         </where>
+          order by id desc
+     </select>
+     
+     <insert id="insertHpIn" parameterType="HpIn">
+        <selectKey keyProperty="id" resultType="int" order="AFTER">
+            select LAST_INSERT_ID()
+        </selectKey>
+        insert into hp_in(hpstorage_date,hp_model,hp_spec,hpstorage_weight,hp_shape,hp_from,
+        hpstorage_state,hp_out_id,hp_purchase_id) value 
+        (#{hpstorageDate},#{hpModel},#{hpSpec},#{hpstorageWeight},#{hpShape},#{hpFrom},
+        #{hpstorageState},#{hpOutId},#{hpPurchaseId})
+     </insert>
+     
+     <update id="updateHpIn" parameterType="HpIn">
+         update hp_in
+         <set>
+          <if test="hpstorageDate != null and hpstorageDate!=''">
+             hpstorage_date = #{hpstorageDate},
+         </if>
+         <if test="hpModel != null and hpModel != ''">
+             hp_model = #{hpModel},
+         </if>
+         <if test="hpSpec != null and hpSpec != ''">
+             hp_spec = #{hpSpec},
+         </if>
+         <if test="hpstorageWeight != null">
+             hpstorage_weight = #{hpstorageWeight},
+         </if>
+         <if test="hpShape != null and hpShape !=''">
+             hp_shape = #{hpShape},
+         </if>
+         <if test="hpFrom != null">
+             hp_from = #{hpFrom},
+         </if>
+         <if test="hpstorageState != null">
+             hpstorage_state = #{hpstorageState},
+         </if>       
+             hp_out_id = #{hpOutId},
+             hp_purchase_id = #{hpPurchaseId}           
+         </set>
+         where id = #{id}
+     </update>
+   
+     <!-- 查找需要修改的记录 -->
+     <select id="checkHpInByOutId" resultType="HpIn" parameterType="int">
+         select * from hp_in where hp_out_id = #{id}
+     </select>
+     <select id="checkHpInByPurchaseId" resultType="HpIn" parameterType="int">
+         select * from hp_in where hp_purchase_id = #{id}
+     </select>
+     
+     <delete id="deleteHpIn" parameterType="int">
+         delete from hp_in where hp_out_id = #{id}
+     </delete>
+     
+</mapper>

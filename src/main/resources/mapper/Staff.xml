@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.npc.plantSCM.dao.StaffDao">
+
+     <!-- 查询staff -->
+     <resultMap type="org.npc.plantSCM.po.Staff" id="staffResult">
+         <id property="sAccount" column="s_account"/>
+         <result property="sPassword" column="s_password" />
+         <result property="staffName" column="staff_name"/>
+         <result property="staffPhone" column="staff_phone" />
+         <association property="role" javaType="org.npc.plantSCM.po.Role">
+             <id property="roleId" column="role_id"/>
+             <result property="roleName" column="role_name"></result>
+         </association>
+     </resultMap>
+     <select id="getStaffBySAccount" resultMap="staffResult" parameterType="String">
+        select * from staff natural join role where s_account = #{sAccount}
+     </select>
+
+
+     <update id="updateShouhuoPhone" parameterType="String">
+         update staff set staff_phone = #{s} where role_id = 1
+     </update>
+     
+     <select id="getPhone" resultType="String">
+          select staff_phone from staff where role_id=1
+
+     </select>
+
+</mapper>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.npc.plantSCM.dao.HpPurchaseDao">
+
+<!-- 根据厂家日期获取购买记录 -->
+    <select id="getHpPurchase" resultType="HpPurchase">
+        select id,date_format(hp_date,'%Y-%m-%d') hp_date,hp_shape,hp_model,hp_spec,hp_price,hp_weight,
+        hp_factory,hp_total_price,hp_note 
+        from hp_purchase
+        <where>
+            <if test="hpFactory != null and hpFactory !='' and hpFactory !='all'">
+                hp_factory = #{hpFactory}
+            </if>
+            <if test="beginDate != null and beginDate != ''">
+                 and date_format(hp_date,'%Y-%m-%d') &gt;= #{beginDate}
+              </if>
+               <if test="endDate != null and endDate != ''">
+                and date_format(hp_date,'%Y-%m-%d') &lt;= #{endDate}
+            </if>    
+        </where>
+        order by id desc
+    </select>
+
+    <insert id="insertHpPurchase" parameterType="HpPurchase">
+        <selectKey keyProperty="id" resultType="int" order="AFTER">
+            select LAST_INSERT_ID()
+        </selectKey>
+        insert into hp_purchase (hp_date,hp_shape,hp_model,hp_spec,hp_price,hp_weight,
+        hp_factory,hp_total_price,hp_note) value
+        (#{hpDate},#{hpShape},#{hpModel},#{hpSpec},#{hpPrice},
+        #{hpWeight},#{hpFactory},#{hpTotalPrice},#{hpNote})
+    </insert>
+    
+    <update id="updateHpPurchase" parameterType="HpPurchase">
+        update hp_purchase
+        <set>
+          <if test="hpDate != null and hpDate !=''">
+             hp_date = #{hpDate},
+         </if>
+         <if test="hpShape != null and hpShape != ''">
+             hp_shape = #{hpShape},
+         </if>
+         <if test="hpModel != null and hpModel !=''">
+             hp_model = #{hpModel},
+         </if>
+         <if test="hpSpec != null and hpSpec!=''">
+             hp_spec = #{hpSpec},
+         </if>
+         <if test="hpPrice != null and hpPrice != ''">
+             hp_price = #{hpPrice},
+         </if>
+         <if test="hpWeight != null and hpWeight !=''">
+             hp_weight = #{hpWeight},
+         </if>
+         <if test="hpFactory != null and hpFactory !=''">
+             hp_factory = #{hpFactory},
+         </if>
+         <if test="hpTotalPrice != null and  hpTotalPrice != null">
+             hp_total_price = #{hpTotalPrice},
+         </if> 
+          hp_note = #{hpNote}
+         </set>
+         where id = #{id}
+    </update>
+    
+     <!-- 获取统计信息 -->
+    <resultMap type="org.npc.plantSCM.po.HpPurchaseStatistics" id="HpPurchaseStatisticsMap">
+         <result property="hpShape" column="hp_shape"/>
+         <result property="hpModel" column="hp_model"/>
+         <result property="hpSpec" column="hp_spec"/>
+         <result property="hpWeightStatistics" column="hp_weight_statistics"/>
+         <result property="hpTotalPriceStatistics" column="hp_total_price_statistics"/>
+     </resultMap>
+     <select id="getHpPurchaseStatistics" resultMap="HpPurchaseStatisticsMap">
+         select hp_shape,hp_model,hp_spec,sum(hp_weight) hp_weight_statistics,
+          sum(hp_total_price) hp_total_price_statistics
+         from hp_purchase 
+         <where>
+             <if test="beginDate != null and beginDate != ''">
+                 date_format(hp_date,'%Y-%m-%d') &gt;= #{beginDate}
+              </if>
+               <if test="endDate != null and endDate != ''">
+                and date_format(hp_date,'%Y-%m-%d') &lt;= #{endDate}
+            </if> 
+         </where>
+         group by hp_shape,hp_model , hp_spec
+     </select>
+</mapper>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+        
+        <!-- 配置数据库参数 -->
+        <context:property-placeholder location="classpath:db.properties" />
+        <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+             <property name="driverClassName" value="${driver}" />
+		     <property name="url" value="${url}" />
+		     <property name="username" value="${jdbc.username}" />
+		     <property name="password" value="${password}" />
+		</bean>
+		
+		<!-- 创建sqlSessionFactory。生产sqlSession -->
+        <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+             <!-- 数据库连接池 -->
+             <property name="dataSource" ref="dataSource" />
+             <!-- mybatis全局配置文件 -->
+             <property name="configLocation" value="classpath:mybatis/mybatis-config.xml" />
+             <!-- 别名，写对应的mapper映射文件可以使用类名代替全路径名 -->
+             <property name="typeAliasesPackage" value="org.npc.plantSCM.po" />
+             <!-- 扫描mapper映射文件 -->
+             <property name="mapperLocations" value="classpath:mapper/*.xml" />
+        </bean>
+        
+        <!-- 配置 mapper扫描器 
+  		      * 接口类名和映射文件必须同名
+    	      * 接口类和映射文件必须在同一个目录下（此处已配置）
+    	      * 映射文件namespace名字必须是接口的全类路径名
+    	      * 接口的方法名必须和映射Statement的id一致
+        -->
+  	    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+  	          <property name="basePackage" value="org.npc.plantSCM.dao"></property>
+  	          <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+  	    </bean>
+  	    
+</beans>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.npc.plantSCM.dao.MaterialPurchaseDao">
+
+<!-- 根据日期、厂家、种类获取采购记录 -->
+    <select id="getMaterialPurchase" resultType="MaterialPurchase">
+        select id,date_format(yl_date,'%Y-%m-%d') yl_date,yl_species,yl_weight,yl_factory,yl_price,yl_total_price,ylnote 
+        from material_purchase
+        <where>
+            <if test="ylFactory != null and ylFactory != '' and ylFactory != 'all'">
+                 yl_factory = #{ylFactory}
+            </if>
+            <if test="ylSpecies != null and ylSpecies != '' and ylSpecies != 'all'">
+                 and yl_species = #{ylSpecies}
+            </if>
+            <if test="beginDate != null and beginDate != ''">
+                 and date_format(yl_date,'%Y-%m-%d') &gt;= #{beginDate}
+              </if>
+               <if test="endDate != null and endDate != ''">
+                and date_format(yl_date,'%Y-%m-%d') &lt;= #{endDate}
+            </if>   
+        </where>
+        order by id desc
+    </select>
+    
+    <insert id="insertMaterialPurchase" parameterType="MaterialPurchase">
+        <selectKey keyProperty="id" resultType="int" order="AFTER">
+            select LAST_INSERT_ID()
+         </selectKey>
+         insert into material_purchase (yl_date,yl_species,yl_weight,yl_factory,yl_price,yl_total_price,ylnote) 
+          value (#{ylDate},#{ylSpecies},#{ylWeight},#{ylFactory},#{ylPrice},#{ylTotalPrice},#{ylnote})
+    </insert>
+
+    <update id="updateMaterialPurchase"  parameterType="MaterialPurchase">
+        update material_purchase
+        <set>
+          <if test="ylDate != null and ylDate !=''">
+             yl_date = #{ylDate},
+         </if>
+         <if test="ylSpecies != null and ylSpecies !=''">
+             yl_species = #{ylSpecies},
+         </if>
+         <if test="ylWeight != null and ylWeight!=''">
+             yl_weight = #{ylWeight},
+         </if>
+         <if test="ylFactory != null and ylFactory != ''">
+             yl_factory = #{ylFactory},
+         </if>
+         <if test="ylPrice != null and ylPrice !=''">
+             yl_price = #{ylPrice},
+         </if>
+         <if test="ylTotalPrice != null and ylTotalPrice != '' ">
+             yl_total_price = #{ylTotalPrice},
+         </if>
+             ylnote = #{ylnote}
+          </set>
+           where id = #{id}
+    </update>
+    
+    <!-- 根据id找到原来的重量 -->
+    <select id="getMaterialPurchasebyId" parameterType="Integer" resultType="Float">
+         select yl_weight from material_purchase where id = #{id}
+    </select>
+    
+    <!-- 统计 -->
+     <resultMap type="org.npc.plantSCM.po.MaterialPurchaseStatistics" id="MaterialPurchaseStatisticsMap">
+         <result property="ylSpecies" column="yl_species"/>
+         <result property="ylWeightStatistics" column="yl_weight_statistics"/>
+         <result property="ylTotalPriceStatistics" column="yl_total_price_statistics"/>
+     </resultMap>
+     <select id="getMaterialPurchaseStatistics" resultMap="MaterialPurchaseStatisticsMap">
+         select yl_species,sum(yl_weight) yl_weight_statistics,
+          sum(yl_total_price) yl_total_price_statistics
+         from material_purchase 
+         <where>
+             <if test="beginDate != null and beginDate != ''">
+                 date_format(yl_date,'%Y-%m-%d') &gt;= #{beginDate}
+              </if>
+               <if test="endDate != null and endDate != ''">
+                and date_format(yl_date,'%Y-%m-%d') &lt;= #{endDate}
+            </if> 
+         </where>
+         group by yl_species
+     </select>
+
+</mapper>

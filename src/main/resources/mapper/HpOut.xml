@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.npc.plantSCM.dao.HpOutDao">
+     
+     <select id="getHpOut" resultType="HpOut">
+         select id,date_format(out_date,'%Y-%m-%d') out_date,out_model,out_spec,out_weight,
+         out_shape,out_flow,customer_name,customer_phone,price,total_price 
+         from hp_out
+         <where>
+             <if test="beginDate != null and beginDate != ''">
+                date_format(out_date,'%Y-%m-%d') &gt;= #{beginDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                and date_format(out_date,'%Y-%m-%d') &lt;= #{endDate}
+            </if>   
+            <if test="outShape != null and outShape !='' and outShape != 'all'">
+                and out_shape= #{outShape}
+            </if>
+            <if test="outModel != null and outModel !='' and outModel != 'all'">
+                and out_model= #{outModel}
+            </if>
+         </where>
+         order by id desc 
+     </select>
+     
+     <insert id="insertHpOut" parameterType="HpOut">
+        <selectKey keyProperty="id" resultType="int" order="AFTER">
+            select LAST_INSERT_ID()
+        </selectKey>
+        insert into hp_out(out_date,out_model,out_spec,out_weight,out_shape,out_flow,
+        customer_name,customer_phone,price,total_price) value 
+        (#{outDate},#{outModel},#{outSpec},#{outWeight},#{outShape},#{outFlow},#{customerName},
+        #{customerPhone},#{price},#{totalPrice})
+     </insert>
+     
+     <update id="updateHpOut" parameterType="HpOut">
+         update hp_out
+         <set>
+          <if test="outDate != null and outDate !=''">
+             out_date = #{outDate},
+         </if>
+         <if test="outModel != null and outModel !=''">
+             out_model = #{outModel},
+         </if>
+         <if test="outSpec != null and outSpec !=''">
+             out_spec = #{outSpec},
+         </if>
+         <if test="outWeight != null">
+             out_weight = #{outWeight},
+         </if>
+         <if test="outShape != null and outShape !=''">
+             out_shape = #{outShape},
+         </if>
+         <if test="outFlow != null">
+             out_flow = #{outFlow},
+         </if>         
+             customer_name = #{customerName},
+             customer_phone = #{customerPhone},
+             price = #{price},
+             total_price = #{totalPrice}
+         </set>
+         where id = #{id}
+     </update>
+     
+     <!-- 查找需要修改的记录 -->
+     <select id="checkHpOut" parameterType="HpOut" resultType="HpOut">
+         select * from hp_out where id = #{id}
+     </select>
+     
+</mapper>

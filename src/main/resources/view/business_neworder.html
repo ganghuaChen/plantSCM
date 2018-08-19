@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>进销存管理系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+       <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">  
+    <script type="text/javascript" src="../js/jquery-2.1.4.min.js"></script> 
+    <script type="text/javascript" src="../js/bootstrap.min.js"></script>
+    <script src="../js/bootstrap-table.min.js"></script>
+    <link rel="stylesheet" href="../css/bootstrap-table.min.css"  /> 
+    <script src="../js/bootstrap-table-zh-CN.min.js"></script>     
+    <script src="../js/bootstrap-select.min.js"></script>
+    <link rel="stylesheet" href="../css/bootstrap-select.min.css"  /> 
+    <script src="../js/defaults-zh_CN.min.js"></script>
+    <script src="../js/moment-with-locales.min.js"></script>  
+    <link  rel="stylesheet" href="../css/bootstrap-datetimepicker.min.css">  
+    <script src="../js/bootstrap-datetimepicker.min.js"></script>
+    <script type="text/javascript" src="../js/jquery-ui.min.js"></script>
+    <link href="../css/tabulator.min.css" rel="stylesheet">
+    <script type="text/javascript" src="../js/tabulator.min.js"></script>
+    <link  rel="stylesheet" href="../css/toastr.min.css">  
+    <script src="../js/toastr.min.js"></script>
+     <script src="../js/bootstrap3-typeahead.min.js"></script>
+    <script>
+        var path="http://localhost:8000/OnlineExam/view/";
+        $(function () {
+        	       
+        	//在右上角添加用户名字
+        	 var storage=window.localStorage;            
+             $("#staff-name").html(storage["staffname"]);
+             
+        	//设置提示框的属性
+        	toastr.options.timeOut = 1300;
+        	toastr.options.positionClass = 'toast-top-center';
+        	toastr.options.preventDuplicates = true;
+        	
+        	 //初始化日期选择器
+        	 var picker1 = $('#datetimepicker1').datetimepicker({          
+        		 format: 'YYYY-MM-DD',          
+        		 locale: moment.locale('zh-cn'), 
+        		 defaultDate: getEndDate() 
+        		 });      
+        	//初始化焊片表
+        	 $("#tb_hp").tabulator({        	    
+         	    layout:"fitColumns", //fit columns to width of table (optional)
+        	    index:1,
+         	    columns:[ //Define Table Columns        	    	
+         	        {title:"形状", field:"hporderShape",align:"center",editor:true,headerSort:false,widthGrow:1,editor:"select",editorParams:{"直":"直","弯":"弯"},},
+         	        {title:"型号", field:"hporderModel",align:"center",headerSort:false,editor:"select",editorParams:getModel(),},
+         	        {title:"规格", field:"hporderSpec",align:"center",editor:true,headerSort:false,widthGrow:1},
+         	        {title:"重量", field:"hporderNumber", align:"center",headerSort:false,editor:true,widthGrow:1},
+         	        {title:"单价", field:"hporderPrice", align:"center",headerSort:false,editor:true,widthGrow:1},
+         	        {title:"总价", field:"hporderTotalPrice", align:"center",headerSort:false,editor:true,widthGrow:1},
+         	        {title:"执行人", field:"hporderPerformer",align:"center",headerSort:false,editor:true,widthGrow:1},
+         	        {title:"应送达日期", field:"hpdeliveryDate",align:"center",headerSort:false,editor:true,widthGrow:1},
+         	        {title:"备注", field:"hporderRemark", align:"center",headerSort:false,editor:true,widthGrow:1},
+         	        {title:"操作",field:"operation",formatter:"tickCross",align:"center",headerSort:false,editor:false,widthGrow:1,cellClick:function(e, cell){cell.getRow().delete()}}   
+         	       
+         	    ], 
+         	  
+         	});  
+        	
+        	 var tabledata = [
+          	   {hpdeliveryDate:afterThreeDate()},
+          	];
+          	//load sample data into the table
+          	$("#tb_hp").tabulator("setData", tabledata);
+          	
+          //获取自动补齐输入框的值列表       	
+        	getReceiver(); 
+        	$("#hpadd-row").click(function(){
+        		$("#tb_hp").tabulator("addRow", {});
+        		});
+        	$("#hpclear-row").click(function(){
+        		$("#tb_hp").tabulator("clearData");        		               	
+                	$("#tb_hp").tabulator("setData", tabledata);
+        		
+        		});
+        	
+        	
+        }); 
+        function add(){
+        	var data = $("#tb_hp").tabulator("getData");
+        	var date =$("#datetimepicker1").find("input").val();
+        	console.log(data);
+        	var dataarray=[];
+        	for(var i=0;i<data.length;i++){
+        
+        	}
+        	/*console.log(dataarray);
+        	$("#example-table").tabulator("setData",dataarray);
+        	 $.ajax({
+                 type:"POST",
+                 url:"/OnlineExam/gc/addopenFactory",
+                 contentType:"application/json;charset=UTF-8",
+                 data:JSON.stringify(dataarray),//将 JavaScript 值转换为 JSON 字符串
+                 dataType:"json",
+                 success:function(data){  	        	          
+                	 toastr.success('添加成功');
+
+                  
+                 }
+              });   */		
+        }
+        //获得三天后数据
+        function afterThreeDate(){
+        	 var date = new Date();
+        	 date.setDate(date.getDate()+3);
+             var seperator1 = "-";
+             var month = date.getMonth() + 1;
+             var strDate = date.getDate();
+             if (month >= 1 && month <= 9) {
+                 month = "0" + month;
+             }
+             if (strDate >= 0 && strDate <= 9) {
+                 strDate = "0" + strDate;
+             }
+             var threeDate = date.getFullYear() + seperator1 + month + seperator1 + strDate;
+             return threeDate;
+        	
+        }
+        //从后台获取型号
+        function getModel(){
+    	var modelobject={};
+    	//modellist从数据库获取
+    	$.ajax({
+    		type:"GET",
+    		url:"/OnlineExam/gc/getModel",//后台
+    		success:function(data){
+    			var modellist=data.result;
+    			//console.log(modellist);
+    			
+    	    	for(var i=0;i<modellist.length;i++){
+    	    		modelobject[modellist[i]]=modellist[i];
+    	    	}  
+    	    	//console.log(modelobject);
+    	    	return modelobject;
+    		}
+    	});
+    	return modelobject;
+    	
+    }
+        //获取联系人
+        function getReceiver(){
+        	$.ajax({
+                type:"GET",
+                url:"/OnlineExam/gc/getModel",//////////////////////////////////////////////////////////////改成正确的url
+                success:function(data){
+                	if(data.code==0){
+                		result=data.result;
+                		$("#receiver").typeahead({
+                            source: result, // 数据源
+                            autoSelect:false,
+                            changeInputOnMove:false,
+                           // changeInputOnSelect:false,
+                            afterSelect: function (item) {
+                            	console.log("select");
+                            	var temp = {
+                            			hpCustomerName:item                                       
+                                    };
+                            	$.ajax({
+                                    type:"GET",
+                                    data:temp,
+                                    dataType:"json",
+                                    url:"/OnlineExam/gc/gethporderrecord",//////////////////////////////////////////////////////////////改成正确的url
+                                    success:function(data){
+                                    	if(data.code==0){
+                                    		result=data.result;
+                                    		for(var i=0;i<result.length;i++){
+                                    			result[i].hpdeliveryDate=afterThreeDate();
+                                    		}
+                                    		$("#tb_hp").tabulator("setData", result);                                    		                         		
+                                    	}                                    	                                        	              
+                                    },                          	       
+                                });                            	                             	                               
+                            }
+                        });
+                		
+                	}
+                	else{
+                		var msg=data.msg;
+                		toastr.error(msg);
+                	}
+                    	              
+                },
+      	       error : function(err){
+      	    	toastr.error('发生错误');
+                 }
+            });
+        }
+       
+     
+        //获得当天日期
+        function getEndDate() {
+            var date = new Date();
+            var seperator1 = "-";
+            var month = date.getMonth() + 1;
+            var strDate = date.getDate();
+            if (month >= 1 && month <= 9) {
+                month = "0" + month;
+            }
+            if (strDate >= 0 && strDate <= 9) {
+                strDate = "0" + strDate;
+            }
+            var endDate = date.getFullYear() + seperator1 + month + seperator1 + strDate;
+            return endDate;
+        }
+        
+              
+        //左侧栏点击事件
+        function clickorderrecord(){
+        	 window.location.href = path+"business_orderrecord.html";        	
+        }
+        function clickpurchaserecord(){
+        	window.location.href = path+"business_purchaserecord.html";
+        }
+        function clickstatistic(){
+        	window.location.href = path+"business_statistics";
+        }        
+        function clickinventory(){
+        	window.location.href = path+"business_inventory.html";
+        }
+        function clickinform(){
+        	window.location.href = path+"business_inform.html";
+        }
+       
+        function logoff(){
+        	  localStorage.clear();
+        	  window.location.href='login.html';
+          }
+        
+      
+    </script>
+</head>
+<body>
+          <!--水平导航栏-->
+          <header>
+                <nav class="navbar navbar-default fixed" id="header-nav" role="navigation" style="width:100%">
+                    <div class="container-fluid">
+                        <div class="navbar-header">
+                            <a class="navbar-brand" href="#">进销存管理系统</a>
+                        </div>
+                        <div class="fl">
+                            <ul class="nav navbar-nav">
+                                <li class="role-navbar-nav active" id="factory-navbar-nav"><a href="">商务人员</a></li>
+                            </ul>
+                        </div>
+                        <div class="fr">
+                            <ul class="nav navbar-nav navbar-right">                                
+                                <li><a id="nav-staff-name" href="#"><span class="glyphicon glyphicon-user"></span><span id="staff-name"></span></a></li>
+                                <li><a id="logout" href="javascript:void(0);" onclick="logoff()"><span class="glyphicon glyphicon-log-out"></span> 退出</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+            </header>         
+            <!--水平导航栏结束-->
+
+                      
+            <div class="container-fluid">
+            <div class="row">
+            <!--垂直导航栏-->
+            <div class="col-xs-1 col-md-2">
+            <!--nav-stacked是说明是竖直导航栏-->
+            <ul id="main-nav" class="nav nav-tabs navbar-default fixed nav-stacked">
+            <li>
+            <a  href="javascript:void(0);" onclick="clickorderrecord()">
+            <i class="glyphicon glyphicon-edit"></i>
+                                           订单管理
+            </a>
+            </li>
+            <li>
+            <a href="javascript:void(0);" onclick="clickpurchaserecord()">
+            <i class="glyphicon glyphicon-edit"></i>
+                                        采购管理
+            </a>
+            </li>
+            <li>
+            <a href="javascript:void(0);" onclick="clickstatistic()">
+            <i class="glyphicon glyphicon-edit"></i>
+                                         统计信息
+            </a>
+            </li>
+            <li>
+            <a href="javascript:void(0);" onclick="clickinventory()">
+             <i class="glyphicon glyphicon-edit"></i>
+                                        查看库存
+            </a>
+            </li>            
+            <li>
+            <a href="javascript:void(0);" onclick="clickinform()">
+            <i class="glyphicon glyphicon-envelope"></i>
+                                        通知列表
+             <span class="label label-warning pull-right">3</span>
+            </a>
+            </li>           
+            </ul>
+            </div>
+             <!--垂直导航栏结束-->
+        
+           <div class="col-xs-11 col-md-10">                            
+               <div class="row">
+               <div style="float:left;"> 
+                                                           收货人</div>
+               <div style="float:left;">
+               <input id="receiver" type='text'  data-provide="typeahead" autocomplete="off" placeholder="请填写收货人" />  
+               </div>                                            
+               <div style="white-space:pre;float:left;">           下单日期</div>
+                <div style="width:200px;float:left;">                 
+                    <div class='input-group date' id='datetimepicker1' >  
+                         <input type='text' class="form-control" placeholder="请选择下单日期" />  
+                         <span class="input-group-addon">  
+                         <span class="glyphicon glyphicon-calendar"></span>  
+                         </span>  
+                    </div>  
+                </div>
+                <div style="float:left;white-space:pre;">         联系电话</div>
+                 <div style="float:left;">
+                  <input id="phone" type='text' placeholder="请填写联系电话" />  
+                 </div>     
+                                                       
+               </div>
+               <br/>
+               <div class="row">
+               <span><span class="glyphicon glyphicon-tree-conifer"></span>焊片</span>
+               </div>
+               <div class="row">
+                  <div class="panel-body" style="padding-bottom:0px;">
+                       <table id="tb_hp"></table>
+                       <button id="hpadd-row"  type="button" class="btn btn-default" ><span class="glyphicon glyphicon-plus"></span></button>
+                       <button id="hpclear-row"  type="button" class="btn btn-default"><span class="glyphicon glyphicon-trash"></span></button>
+                       
+                   </div>
+               </div>
+                <br/>
+                
+               <div class="row">
+               <span><span class="glyphicon glyphicon-leaf"></span>焊剂</span>
+               </div>
+               <div class="row">
+                  <div class="panel-body" style="padding-bottom:0px;">
+                       <table id="tb_hj"></table>
+                       <button id="hjadd-row"  type="button" class="btn btn-default"><span class="glyphicon glyphicon-plus"></span></button>
+                       <button id="hjclear-row"  type="button" class="btn btn-default"><span class="glyphicon glyphicon-trash"></span></button>
+                   </div>
+               </div>
+              </div>
+
+      </div>
+ </div>
+</body>
+</html>

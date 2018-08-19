@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.npc.plantSCM.dao.MaterialInventoryDao">
+
+    <!-- 获取原料库存 -->
+    <select id="getYlremainingInventoryByYlType" resultType="Float" parameterType="String">
+         select ylremaining_inventory from material_inventory where yl_type = #{ylType};
+    </select>
+    
+    <!-- 修改库存数量 -->
+    <update id="modifyYlremainingInventoryByYlType">
+         update material_inventory
+         <set>   
+              <if test="num != null">
+                  ylremaining_inventory= #{num}
+              </if>       
+         </set>
+         where yl_type = #{ylType}
+    </update>
+</mapper>
